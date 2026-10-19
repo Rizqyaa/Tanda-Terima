@@ -1,0 +1,41 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: #f4f6f9;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.table-scroll::-webkit-scrollbar {
+    height: 8px;
+    width: 8px;
+}
+.table-scroll::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 10px;
+}
+
+.table-scroll::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.4);
+    border-radius: 10px;
+}
+
+.table-scroll::-webkit-scrollbar-thumb:hover {
+    background: rgba(148, 163, 184, 0.7);
+}
+
+input[type="text"], 
+input[type="date"], 
+textarea, 
+select {
+    transition: all 0.25s ease-in-out;
+}
+
+button {
+    transition: transform 0.1s ease, background-color 0.2s ease;
+}
+
+button:active {
+    transform: scale(0.97);
+}

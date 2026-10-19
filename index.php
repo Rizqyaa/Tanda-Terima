@@ -156,10 +156,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $url_year = isset($_POST['selected_year']) ? urlencode($_POST['selected_year']) : '';
         $url_bulan = isset($_POST['selected_bulan']) ? urlencode($_POST['selected_bulan']) : '';
         $url_limit = isset($_POST['selected_limit']) ? urlencode($_POST['selected_limit']) : '10';
+        $url_page = isset($_POST['selected_page']) ? (int)$_POST['selected_page'] : 1;
 
-        header("Location: index.php?search=$url_search&sort=$url_sort&year=$url_year&bulan=$url_bulan&limit=$url_limit");
-        exit();
-    }
+        header("Location: index.php?search=$url_search&sort=$url_sort&year=$url_year&bulan=$url_bulan&limit=$url_limit&page=$url_page");
+        }
 }
 
 $edit_data = null;
@@ -283,7 +283,6 @@ $total_data = $query_total->fetch_assoc()['total'];
         <main class="flex-1 ml-64 p-8">
             <header class="mb-6">
                 <h1 class="text-3xl font-extrabold text-[#0f172a]">Tanda Terima</h1>
-                <!-- <p class="text-sm text-gray-500 mt-1 font-medium">Kelola data pengiriman surat dan barang dengan mudah</p> -->
             </header>
         
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 item-start">
@@ -300,7 +299,7 @@ $total_data = $query_total->fetch_assoc()['total'];
                 </div>
                 
                 <form id="form-crud" action="index.php" method="POST" enctype="multipart/form-data" class="flex flex-col gap-4" <?= $edit_data ? 'onsubmit="event.preventDefault(); confirmAction(\'update\');"' : '' ?>>
-                    
+                    <input type="hidden" name="selected_page" value="<?= $page ?>">
                     <input type="hidden" name="action" value="<?= $edit_data ? 'update' : 'create' ?>">
                     <input type="hidden" name="selected_search" value="<?= htmlspecialchars($search ?? '') ?>">
                     <input type="hidden" name="selected_sort" value="<?= htmlspecialchars($sort ?? 'desc') ?>">
@@ -407,6 +406,7 @@ $total_data = $query_total->fetch_assoc()['total'];
                     </div>
 
                     <form action="index.php" method="GET" class="flex flex-col md:flex-row gap-4 items-end">
+                        <input type="hidden" name="page" value="1">
                         <input type="hidden" name="year" value="<?= htmlspecialchars($selected_year ?? '') ?>">
                         <input type="hidden" name="bulan" value="<?= htmlspecialchars($selected_bulan ?? '') ?>">
                         
@@ -471,7 +471,7 @@ $total_data = $query_total->fetch_assoc()['total'];
                     <?php endif; ?>
                 </div>
 
-                <!-- Card Tabel -->
+                <!-- card tabel -->
                 <?php if (empty($data_per_bulan) || !isset($selected_bulan) || empty($data_per_bulan[$selected_bulan])): ?>
                     <div class="bg-white rounded-[24px] p-12 text-center shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-gray-100/50 flex flex-col items-center justify-center">
                         <svg class="w-16 h-16 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>
@@ -481,12 +481,33 @@ $total_data = $query_total->fetch_assoc()['total'];
                     <div class="bg-white rounded-[24px] shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-gray-100/50 overflow-hidden">
                         
                         <?php 
-                            $items = $data_per_bulan[$selected_bulan]; 
-                            $display_limit = ($limit_val === 'all') ? count($items) : (int)$limit_val;
-                            $items_to_display = array_slice($items, 0, $display_limit);
+                            $items = $data_per_bulan[$selected_bulan] ?? []; 
+                            $total_items_bulan = count($items);
+
+                            $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+
+                            if ($limit_val === 'all') {
+                                $per_page = $total_items_bulan > 0 ? $total_items_bulan : 1;
+                                $total_pages = 1;
+                                $page = 1;
+                                $offset = 0;
+                                $items_to_display = $items;
+                                $start_no = 1;
+                            } else {
+                                $per_page = (int)$limit_val;
+                                $total_pages = max(1, (int)ceil($total_items_bulan / $per_page));
+                                if ($page > $total_pages) $page = $total_pages;
+
+                                $offset = ($page - 1) * $per_page;
+                                $items_to_display = array_slice($items, $offset, $per_page);
+                                
+                                $start_no = $offset + 1;
+                            }
+
+                            $end_no = min($offset + count($items_to_display), $total_items_bulan);
                         ?>
                         
-                        <!-- Header Tabel -->
+                        <!-- header -->
                         <div class="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
                             <h2 class="text-lg font-bold text-gray-800">Daftar Tanda Terima</h2>
                             <span class="inline-flex items-center px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-xs font-semibold">
@@ -494,7 +515,7 @@ $total_data = $query_total->fetch_assoc()['total'];
                             </span>
                         </div>
 
-                        <!-- Data Tabel -->
+                        <!-- tabel -->
                         <div class="overflow-x-auto table-scroll px-2">
                             <table class="w-full text-left border-collapse whitespace-nowrap">
                                 <thead>
@@ -510,7 +531,7 @@ $total_data = $query_total->fetch_assoc()['total'];
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php $no = 1; foreach ($items_to_display as $item): ?>
+                                    <?php $no = $start_no; foreach ($items_to_display as $item): ?>
                                         <tr class="hover:bg-gray-50/50 transition-colors group">
                                             <td class="px-4 py-4 text-sm text-gray-500 align-top pt-5"><?= $no++ ?></td>
                                             
@@ -544,7 +565,9 @@ $total_data = $query_total->fetch_assoc()['total'];
 
                                             <!-- Tujuan & Penerima (Digabungkan agar rapi) -->
                                             <td class="px-4 py-4 align-top">
-                                                <div class="text-sm font-medium text-gray-800 mb-0.5"><?= htmlspecialchars($item['tujuan']) ?></div>
+                                                <div class="text-sm font-medium text-gray-800 mb-0.5">
+                                                    <?= !empty(trim($item['tujuan'] ?? '')) ? htmlspecialchars($item['tujuan']) : '- -' ?>
+                                                </div>
                                             </td>
 
                                             <td class="px-4 py-4 align-top">
@@ -589,13 +612,92 @@ $total_data = $query_total->fetch_assoc()['total'];
                                                 </div>
                                             </td>
                                         </tr>
+                                        
                                     <?php endforeach; ?>
                                 </tbody>
                             </table>
                         </div>
+                        <?php if ($total_pages > 1 || $limit_val !== 'all'): ?>
+                        <div class="px-6 py-4 bg-gray-50/50 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+                            
+                            <!-- Info Rentang Data -->
+                            <div class="text-xs text-gray-500 font-medium">
+                                Menampilkan <span class="font-bold text-gray-800"><?= $total_items_bulan > 0 ? $start_no : 0 ?></span> - <span class="font-bold text-gray-800"><?= $end_no ?></span> dari <span class="font-bold text-gray-800"><?= $total_items_bulan ?></span> data
+                            </div>
+
+                            <!-- Tombol Navigasi Halaman -->
+                            <?php if ($total_pages > 1): ?>
+                            <div class="flex items-center gap-1">
+                                
+                                <!-- Tombol Prev -->
+                                <?php if ($page > 1): ?>
+                                    <a href="index.php?search=<?= urlencode($search) ?>&sort=<?= strtolower($sort) ?>&year=<?= urlencode($selected_year) ?>&bulan=<?= urlencode($selected_bulan) ?>&limit=<?= urlencode($limit_val) ?>&page=<?= $page - 1 ?>" 
+                                       class="px-3 py-1.5 text-xs font-semibold text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-100 transition-all flex items-center gap-1 shadow-sm">
+                                        <svg class="shrink-0 size-3.5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                                        <span class="sr-only">Previous</span>
+                                    </a>
+                                <?php else: ?>
+                                    <span class="px-3 py-1.5 text-xs font-semibold text-gray-300 bg-gray-100 border border-gray-200 rounded-lg cursor-not-allowed flex items-center gap-1">
+                                        <svg class="shrink-0 size-3.5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                                    </span>
+                                <?php endif; ?>
+
+                                <!-- Angka Halaman -->
+                                <div class="flex items-center gap-1 px-1">
+                                    <?php
+                                    // Menampilkan maksimal 5 tombol halaman di tengah
+                                    $start_page = max(1, $page - 2);
+                                    $end_page = min($total_pages, $page + 2);
+
+                                    if ($start_page > 1) {
+                                        echo '<a href="index.php?search='.urlencode($search).'&sort='.strtolower($sort).'&year='.urlencode($selected_year).'&bulan='.urlencode($selected_bulan).'&limit='.urlencode($limit_val).'&page=1" class="w-8 h-8 flex items-center justify-center text-xs font-semibold rounded-full bg-white border border-gray-200 text-gray-600 hover:bg-gray-100">1</a>';
+                                        if ($start_page > 2) echo '<span class="text-xs text-gray-400 px-1">...</span>';
+                                    }
+
+                                    for ($p = $start_page; $p <= $end_page; $p++):
+                                    ?>
+                                        <a href="index.php?search=<?= urlencode($search) ?>&sort=<?= strtolower($sort) ?>&year=<?= urlencode($selected_year) ?>&bulan=<?= urlencode($selected_bulan) ?>&limit=<?= urlencode($limit_val) ?>&page=<?= $p ?>" 
+                                           class="w-8 h-8 flex items-center justify-center text-xs font-bold rounded-full transition-all <?= $p == $page ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-100' ?>">
+                                            <?= $p ?>
+                                        </a>
+                                    <?php endfor; ?>
+
+                                    <?php
+                                    if ($end_page < $total_pages) {
+                                        if ($end_page < $total_pages - 1) echo '<span class="text-xs text-gray-400 px-1">...</span>';
+                                        echo '<a href="index.php?search='.urlencode($search).'&sort='.strtolower($sort).'&year='.urlencode($selected_year).'&bulan='.urlencode($selected_bulan).'&limit='.urlencode($limit_val).'&page='.$total_pages.'" class="w-8 h-8 flex items-center justify-center text-xs font-semibold rounded-full bg-white border border-gray-200 text-gray-600 hover:bg-gray-100">'.$total_pages.'</a>';
+                                    }
+                                    ?>
+                                </div>
+
+                                <!-- Tombol Next -->
+                                <?php if ($page < $total_pages): ?>
+                                    <a href="index.php?search=<?= urlencode($search) ?>&sort=<?= strtolower($sort) ?>&year=<?= urlencode($selected_year) ?>&bulan=<?= urlencode($selected_bulan) ?>&limit=<?= urlencode($limit_val) ?>&page=<?= $page + 1 ?>" 
+                                       class="px-3 py-1.5 text-xs font-semibold text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-100 transition-all flex items-center gap-1 shadow-sm">
+                                        <svg class="shrink-0 size-3.5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                                    </a>
+                                <?php else: ?>
+                                    <span class="px-3 py-1.5 text-xs font-semibold text-gray-300 bg-gray-100 border border-gray-200 rounded-lg cursor-not-allowed flex items-center gap-1">
+                                        <svg class="shrink-0 size-3.5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                                    </span>
+                                <?php endif; ?>
+
+                                <div class="flex items-center gap-1.5 pl-2 ml-1 border-l border-gray-200">
+                                    <span class="text-xs text-gray-500 font-medium">Ke:</span>
+                                    <input type="number" id="goto-page-input" min="1" max="<?= $total_pages ?>" value="<?= $page ?>" onkeydown="if(event.key==='Enter') jumpToPage()" class="w-14 px-2 py-1 text-xs font-bold text-center bg-white border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm">
+                                    <button type="button" onclick="jumpToPage()" class="px-2.5 py-1 text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200/60 rounded-lg transition-colors">
+                                        Go
+                                    </button>
+                                </div>
+                            </div>
+                            <?php endif; ?>
+
+                        </div>
+                        <?php endif; ?>
                     </div>
                 <?php endif; ?>
                 </div>
+                
             </section>
         </main>
     </div>
@@ -704,6 +806,26 @@ $total_data = $query_total->fetch_assoc()['total'];
 
     setupPreview('fotoSurat', 'preview-surat');
     setupPreview('fotoPenerima', 'preview-penerima');
+</script>
+
+<script>
+    function jumpToPage() {
+        const input = document.getElementById('goto-page-input');
+        let targetPage = parseInt(input.value);
+        const maxPages = <?= $total_pages ?>;
+
+        if (isNaN(targetPage) || targetPage < 1) {
+            targetPage = 1;
+        } else if (targetPage > maxPages) {
+            targetPage = maxPages;
+        }
+
+        // Ambil URL saat ini dan ubah hanya parameter 'page'
+        const urlParams = new URLSearchParams(window.location.search);
+        urlParams.set('page', targetPage);
+        
+        window.location.search = urlParams.toString();
+    }
 </script>
 </body>
 </html>

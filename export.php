@@ -15,7 +15,7 @@ if ($conn->connect_error) {
 $start_date = isset($_GET['start_date']) ? $conn->real_escape_string($_GET['start_date']) : date('Y-m-01');
 $end_date = isset($_GET['end_date']) ? $conn->real_escape_string($_GET['end_date']) : date('Y-m-t');
 $search = isset($_GET['search']) ? $conn->real_escape_string($_GET['search']) : '';
-$sort = isset($_GET['sort']) && $_GET['sort'] == 'asc' ? 'ASC' : 'DESC';
+$sort = isset($_GET['sort']) && $_GET['sort'] == 'desc' ? 'DESC' : 'ASC';
 
 $sql_data = "SELECT * FROM tanda_terima WHERE DATE(tgl) >= '$start_date' AND DATE(tgl) <= '$end_date' AND (nomor LIKE '%$search%' OR nama_pengirim LIKE '%$search%' OR tujuan LIKE '%$search%') ORDER BY tgl $sort";
 

@@ -16,7 +16,7 @@ if ($conn->connect_error) {
 $start_date = isset($_GET['start_date']) ? $conn->real_escape_string($_GET['start_date']) : date('Y-m-01');
 $end_date = isset($_GET['end_date']) ? $conn->real_escape_string($_GET['end_date']) : date('Y-m-t');
 $search = isset($_GET['search']) ? $conn->real_escape_string($_GET['search']) : '';
-$sort = isset($_GET['sort']) && $_GET['sort'] == 'asc' ? 'ASC' : 'DESC';
+$sort = isset($_GET['sort']) && $_GET['sort'] == 'desc' ? 'DESC' : 'ASC';
 
 $sql_data = "SELECT * FROM tanda_terima WHERE DATE(tgl) >= '$start_date' AND DATE(tgl) <= '$end_date' AND (nomor LIKE '%$search%' OR nama_pengirim LIKE '%$search%' OR tujuan LIKE '%$search%') ORDER BY tgl $sort";
 
@@ -98,7 +98,7 @@ $total_data = count($items);
                         <input type="date" name="end_date" value="<?= htmlspecialchars($end_date) ?>" required class="px-4 py-2 bg-gray-50 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 outline-none">
                     </div>
                     <div class="flex-1">
-                        <label class="block text-[12px] font-semibold text-gray-500 mb-1.5">Pencarian Kata (Opsional)</label>
+                        <label class="block text-[12px] font-semibold text-gray-500 mb-1.5">Pencarian</label>
                         <input type="text" name="search" value="<?= htmlspecialchars($search) ?>" placeholder="Cari nomor/pengirim..." class="w-full px-4 py-2 bg-gray-50 border rounded-lg text-sm outline-none">
                     </div>
                     <div>
@@ -124,7 +124,7 @@ $total_data = count($items);
                             <thead>
                                 <tr class="bg-white border-b border-gray-100">
                                     <th class="px-4 py-4 border-b border-gray-100 text-[11px] font-bold text-gray-400 uppercase tracking-wider">NO</th>
-                                    <th class="px-4 py-3 text-[11px] font-bold text-gray-400 uppercase">FOTO</th>
+                                    <th class="px-4 py-3 text-[11px] font-bold text-gray-400 uppercase">FOTO BARANG</th>
                                     <th class="px-4 py-3 text-[11px] font-bold text-gray-400 uppercase">PENGIRIMAN</th>
                                     <th class="px-4 py-3 text-[11px] font-bold text-gray-400 uppercase">KETERANGAN</th>
                                     <th class="px-4 py-3 text-[11px] font-bold text-gray-400 uppercase">TUJUAN</th>
@@ -145,7 +145,10 @@ $total_data = count($items);
                                                     <img src="images/<?= $item['foto_surat'] ?>" class="w-12 h-12 object-cover rounded-lg border">
                                                 </a>
                                             <?php else: ?>
-                                                <div class="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center border text-[10px] text-gray-400">No Foto</div>
+                                                <!-- <div class="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center border text-[10px] text-gray-400">No Foto</div> -->
+                                                <div class="w-14 h-14 bg-gray-100 rounded-lg flex items-center justify-center border text-[10px] text-gray-40">
+                                                    <svg class="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                                </div>
                                             <?php endif; ?>
                                         </td>
                                         <!-- INFO PENGIRIMAN -->

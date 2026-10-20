@@ -67,7 +67,6 @@ $total_data = count($items);
             </nav>
         </aside>
 
-        <!-- KONTEN UTAMA REKAPAN -->
         <main class="flex-1 ml-64 p-8">
             <header class="mb-6">
                 <h1 class="text-3xl font-extrabold text-[#0f172a]">Rekapan Data</h1>
@@ -84,7 +83,6 @@ $total_data = count($items);
             </header>
             
 
-            <!-- CARD FILTER -->
             <div class="bg-white p-6 rounded-[24px] shadow-sm border border-gray-100 mb-8">
                 <h3 class="text-sm font-bold text-gray-800 mb-4 uppercase tracking-wide border-b pb-2">Filter Periode</h3>
                 
@@ -107,7 +105,6 @@ $total_data = count($items);
                 </form>
             </div>
 
-            <!-- TABEL HASIL REKAPAN -->
             <div class="bg-white rounded-[24px] shadow-sm border border-gray-100 overflow-hidden">
                 <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
                     <h2 class="text-sm font-bold text-gray-800">
@@ -138,20 +135,17 @@ $total_data = count($items);
                                     <tr class="hover:bg-gray-50/50 transition-colors">
                                         <td class="px-4 py-4 text-sm text-gray-500 align-top pt-5"><?= $no++ ?></td>
 
-                                        <!-- FOTO -->
                                         <td class="px-4 py-4 align-top">
                                             <?php if(!empty($item['foto_surat']) && file_exists('images/'.$item['foto_surat'])): ?>
                                                 <a href="images/<?= $item['foto_surat'] ?>" target="_blank">
                                                     <img src="images/<?= $item['foto_surat'] ?>" class="w-12 h-12 object-cover rounded-lg border">
                                                 </a>
                                             <?php else: ?>
-                                                <!-- <div class="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center border text-[10px] text-gray-400">No Foto</div> -->
                                                 <div class="w-14 h-14 bg-gray-100 rounded-lg flex items-center justify-center border text-[10px] text-gray-40">
                                                     <svg class="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                                                 </div>
                                             <?php endif; ?>
                                         </td>
-                                        <!-- INFO PENGIRIMAN -->
                                         <td class="px-4 py-4 align-top">
                                             <div class="text-sm font-bold text-gray-800"><?= htmlspecialchars($item['nomor']) ?></div>
                                             <div class="text-xs text-gray-500">Dari: <?= htmlspecialchars($item['nama_pengirim']) ?></div>
@@ -159,7 +153,6 @@ $total_data = count($items);
                                                 <?= date('d M Y', strtotime($item['tgl'])) ?>
                                             </div>
                                         </td>
-                                        <!-- KETERANGAN -->
                                         <td class="px-4 py-4 align-top text-sm text-gray-600 max-w-[250px] whitespace-normal">
                                             <?= htmlspecialchars($item['keterangan']) ?>
                                         </td>
@@ -182,16 +175,6 @@ $total_data = count($items);
                                                     </div>
                                                 <?php endif; ?>
                                             </td>
-                                        <!-- AKSI (Hanya Cetak) -->
-                                        <!-- <td class="px-4 py-4 align-top text-center">
-                                            <?php if(file_exists('cetak.php')): ?>
-                                                <a href="cetak.php?id=<?= $item['id'] ?>" target="_blank" class="inline-flex w-8 h-8 rounded bg-emerald-50 text-emerald-600 items-center justify-center hover:bg-emerald-100">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
-                                                </a>
-                                            <?php else: ?>
-                                                <span class="text-xs text-gray-400">Cetak tidak tersedia</span>
-                                            <?php endif; ?>
-                                        </td> -->
                                     </tr>
                                 <?php endforeach; ?>
                             </tbody>

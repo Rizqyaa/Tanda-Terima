@@ -12,7 +12,7 @@ $conn = new mysqli($host, $user, $pass, $db);
 if ($conn->connect_error) {
     die("Koneksi gagal: " . $conn->connect_error);
 }
-// CRUD (CREATE & DELETE) 
+
 $redirect_query = [];
 if (isset($_POST['selected_search'])) {
     $redirect_query['search'] = $_POST['selected_search'];
@@ -35,7 +35,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             mkdir('images', 0777, true);
         }
 
-        // 1. Upload Foto Surat/Barang
         $foto_surat_name = null;
         if (isset($_FILES['foto_surat']) && $_FILES['foto_surat']['error'] === UPLOAD_ERR_OK) {
             $ext = pathinfo($_FILES['foto_surat']['name'], PATHINFO_EXTENSION);
@@ -43,7 +42,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             move_uploaded_file($_FILES['foto_surat']['tmp_name'], 'images/' . $foto_surat_name);
         }
 
-        // 2. Upload Foto Penerima
         $foto_penerima_name = null;
         if (isset($_FILES['foto_penerima']) && $_FILES['foto_penerima']['error'] === UPLOAD_ERR_OK) {
             $ext = pathinfo($_FILES['foto_penerima']['name'], PATHINFO_EXTENSION);
@@ -55,12 +53,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $pesan_foto = "";
             $foto_name = null;
             
-            // CEK APAKAH FORM MENGIRIMKAN FILE
             if (!isset($_FILES['foto'])) {
                 $pesan_foto = " (Peringatan: Atribut enctype='multipart/form-data' di form HTML Anda sepertinya hilang!)";
             } 
             elseif ($_FILES['foto']['name'] != '') {
-                // JIKA FILE ADA, CEK APAKAH ADA ERROR SAAT UPLOAD
                 if ($_FILES['foto']['error'] === 0) {
                     if (!file_exists('images')) {
                         mkdir('images', 0777, true);
@@ -68,7 +64,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     $ext = pathinfo($_FILES['foto']['name'], PATHINFO_EXTENSION);
                     $foto_name = 'bukti_' . time() . '_' . uniqid() . '.' . $ext;
                     
-                    // CEK APAKAH FOLDER MENGIZINKAN FILE MASUK
                     if(!move_uploaded_file($_FILES['foto']['tmp_name'], 'images/' . $foto_name)){
                         $pesan_foto = " (Peringatan: Foto gagal dipindahkan! Cek izin folder 'images').";
                         $foto_name = null;
@@ -78,7 +73,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 }
             }
 
-            // SIMPAN DATA KE DATABASE
             $tanggal_input = $conn->real_escape_string($_POST['tgl']);
             $nomor = $conn->real_escape_string($_POST['nomor']);
             $nama_pengirim = $conn->real_escape_string($_POST['nama_pengirim']);
@@ -108,13 +102,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             
             $tanggal_waktu = $tanggal_input . ' ' . date('H:i:s');
             
-            // Ambil data foto lama
+            // ambil data foto lama
             $old = $conn->query("SELECT foto_surat, foto_penerima FROM tanda_terima WHERE id='$id'")->fetch_assoc();
 
             $final_foto_surat = $foto_surat_name ? $foto_surat_name : $old['foto_surat'];
             $final_foto_penerima = $foto_penerima_name ? $foto_penerima_name : $old['foto_penerima'];
 
-            // Hapus file fisik jika diganti foto baru
+            // hapus file fisik jika diganti foto baru
             if ($foto_surat_name && !empty($old['foto_surat']) && file_exists('images/' . $old['foto_surat'])) {
                 unlink('images/' . $old['foto_surat']);
             }
@@ -180,12 +174,11 @@ $bulan_indonesia = [
 ];
 
 $search = isset($_GET['search']) ? $conn->real_escape_string($_GET['search']) : '';
-$sort = isset($_GET['sort']) && $_GET['sort'] == 'asc' ? 'ASC' : 'DESC'; // Default terbaru (DESC)
+$sort = isset($_GET['sort']) && $_GET['sort'] == 'asc' ? 'ASC' : 'DESC'; 
 $selected_bulan = isset($_GET['bulan']) ? $_GET['bulan'] : '';
 $selected_year = isset($_GET['year']) ? $_GET['year'] : '';
 $limit_val = isset($_GET['limit']) ? $_GET['limit'] : '10'; 
 
-// Logika Search: Mencari dari string teks, format YYYY-MM-DD, atau format DD/MM/YYYY
 $sql_data = "SELECT *, DATE_FORMAT(tgl, '%Y-%m') as bulan_tahun, DATE_FORMAT(tgl, '%M %Y') as nama_bulan 
              FROM tanda_terima WHERE 
              (nomor LIKE '%$search%' 
@@ -199,7 +192,6 @@ $sql_data = "SELECT *, DATE_FORMAT(tgl, '%Y-%m') as bulan_tahun, DATE_FORMAT(tgl
 
 $result = $conn->query($sql_data);
 
-// Mengelompokkan data per bulan menggunakan array keyed berdasarkan YYYY-MM
 $data_per_bulan = [];
 if ($result->num_rows > 0) {
     while($row = $result->fetch_assoc()) {
@@ -262,17 +254,14 @@ $total_data = $query_total->fetch_assoc()['total'];
         <aside class="w-64 bg-white border-r border-gray-100 flex-shrink-0 fixed h-full z-10 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
             <div class="p-6 pb-4 border-b border-gray-50">
                 <h1 class="text-2xl font-extrabold text-[#0f172a] tracking-tight">uhm..<span class="text-blue-600">Surat</span></h1>
-                <!-- <p class="text-[11px] text-gray-400 font-medium mt-1 uppercase tracking-wider">Sistem Tanda Terima</p> -->
             </div>
             
             <nav class="p-4 flex flex-col gap-2">
-                <!-- Menu 1: Tanda Terima (Aktif) -->
                 <a href="index.php" class="flex items-center gap-3 px-4 py-3 bg-blue-50 text-blue-700 rounded-xl font-semibold transition-all">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                     Tanda Terima
                 </a>
                 
-                <!-- Menu 2: Rekapan -->
                 <a href="rekapan.php" class="flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-xl font-medium transition-all">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                     Rekapan Laporan
@@ -294,7 +283,7 @@ $total_data = $query_total->fetch_assoc()['total'];
                         <?= $edit_data ? 'Edit Tanda Terima' : 'Tambah Tanda Terima' ?>
                     </h2>
                     <?php if($edit_data): ?>
-                        <a href="index.php?search=<?= urlencode($search) ?>&sort=<?= strtolower($sort) ?>&year=<?= urlencode($selected_year) ?>&bulan=<?= urlencode($selected_bulan) ?>&limit=<?= urlencode($limit_val) ?>" class="text-xs font-semibold text-blue-500 hover:underline">Batal Edit</a>
+                        <a href="index.php?search=<?= urlencode($search) ?>&sort=<?= strtolower($sort) ?>&year=<?= urlencode($selected_year) ?>&bulan=<?= urlencode($selected_bulan) ?>&limit=<?= urlencode($limit_val) ?>" class="text-xs font-semibold text-red-500 hover:underline">Batal Edit</a>
                     <?php endif; ?>
                 </div>
                 
@@ -343,7 +332,6 @@ $total_data = $query_total->fetch_assoc()['total'];
                                         
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-1">
         
-                        <!-- 1. INPUT FOTO SURAT / BARANG -->
                         <div class="bg-white text-slate-600 rounded-xl border border-slate-200 p-3 flex flex-col items-center justify-between text-center relative">
                             <span class="text-[11px] font-bold text-gray-600 mb-2">📄 Foto Surat / Barang</span>
                             
@@ -362,7 +350,6 @@ $total_data = $query_total->fetch_assoc()['total'];
                             </label>
                         </div>
 
-                        <!-- 2. INPUT FOTO PENERIMA -->
                         <div class="bg-white text-slate-600 rounded-xl border border-slate-200 p-3 flex flex-col items-center justify-between text-center relative">
                             <span class="text-[11px] font-bold text-gray-600 mb-2">👤 Foto Penerima</span>
                             
@@ -394,10 +381,8 @@ $total_data = $query_total->fetch_assoc()['total'];
             <!-- kolom kanan :tabel & filter -->
             <section class="lg:col-span-8 xl:col-span-9 flex flex-col gap-6">
 
-                <!-- Filter & Search Panel -->
                 <div class="bg-white p-5 rounded-[20px] shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-gray-100/50">
                     
-                    <!-- Header Card Filter + Badge Total Data -->
                     <div class="flex items-center justify-between mb-5 pb-4 border-b border-gray-100">
                         <h2 class="text-lg font-bold text-gray-800">Cari & Filter Data</h2>
                         <span class="inline-flex items-center px-3.5 py-1.5 rounded-full bg-blue-50 text-blue-600 text-xs font-bold tracking-wide">
@@ -439,7 +424,7 @@ $total_data = $query_total->fetch_assoc()['total'];
                         </div>
                     </form>
 
-                    <!-- Filter Bulan/Tahun -->
+                    <!-- filter bulan/tahun -->
                     <?php if (!empty($years) && !empty($data_per_bulan)): ?>
                     <div class="mt-5 pt-5 border-t border-gray-100">
                         <div class="flex flex-wrap items-center gap-x-6 gap-y-3">
@@ -456,13 +441,17 @@ $total_data = $query_total->fetch_assoc()['total'];
                                 <span class="text-xs font-semibold uppercase tracking-wide text-gray-400">Bulan:</span>
                                 <div class="flex items-center gap-1 bg-gray-100 p-1 rounded-lg">
                                     <?php if (isset($prev_bulan)): ?>
-                                        <a href="index.php?search=<?= urlencode($search) ?>&sort=<?= strtolower($sort) ?>&year=<?= substr($prev_bulan, 0, 4) ?>&bulan=<?= $prev_bulan ?>&limit=<?= urlencode($limit_val) ?>" class="px-2 py-1 text-xs font-medium text-gray-600 hover:bg-white hover:shadow-sm rounded transition-all">&larr; Prev</a>
+                                        <a href="index.php?search=<?= urlencode($search) ?>&sort=<?= strtolower($sort) ?>&year=<?= substr($prev_bulan, 0, 4) ?>&bulan=<?= $prev_bulan ?>&limit=<?= urlencode($limit_val) ?>" class="px-2 py-1 text-xs font-medium text-gray-600 hover:bg-white hover:shadow-sm rounded transition-all">
+                                        <svg class="shrink-0 size-3.5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/>Previous</svg>
+                                        </a>
                                     <?php endif; ?>
                                     <span class="px-3 py-1 text-[13px] font-semibold text-gray-800 bg-white shadow-sm rounded">
                                         <?= $bulan_indonesia[date('F', strtotime($selected_bulan . '-01'))] ?? 'Bulan' ?>
                                     </span>
                                     <?php if (isset($next_bulan)): ?>
-                                        <a href="index.php?search=<?= urlencode($search) ?>&sort=<?= strtolower($sort) ?>&year=<?= substr($next_bulan, 0, 4) ?>&bulan=<?= $next_bulan ?>&limit=<?= urlencode($limit_val) ?>" class="px-2 py-1 text-xs font-medium text-gray-600 hover:bg-white hover:shadow-sm rounded transition-all">Next &rarr;</a>
+                                        <a href="index.php?search=<?= urlencode($search) ?>&sort=<?= strtolower($sort) ?>&year=<?= substr($next_bulan, 0, 4) ?>&bulan=<?= $next_bulan ?>&limit=<?= urlencode($limit_val) ?>" class="px-2 py-1 text-xs font-medium text-gray-600 hover:bg-white hover:shadow-sm rounded transition-all">
+                                            <svg class="shrink-0 size-3.5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/>Next</svg>
+                                        </a>
                                     <?php endif; ?>
                                 </div>
                             </div>
@@ -558,12 +547,10 @@ $total_data = $query_total->fetch_assoc()['total'];
                                                 </div>                                     
                                             </td>
 
-                                            <!-- keterangan -->
                                             <td class="px-4 py-4 align-top max-w-[200px] truncate text-sm text-gray-600 pt-5">
                                                 <?= htmlspecialchars($item['keterangan']) ?>
                                             </td>
 
-                                            <!-- Tujuan & Penerima (Digabungkan agar rapi) -->
                                             <td class="px-4 py-4 align-top">
                                                 <div class="text-sm font-medium text-gray-800 mb-0.5">
                                                     <?= !empty(trim($item['tujuan'] ?? '')) ? htmlspecialchars($item['tujuan']) : '- -' ?>
@@ -586,15 +573,12 @@ $total_data = $query_total->fetch_assoc()['total'];
                                                 <?php endif; ?>
                                             </td>
 
-                                            <!-- Kolom Aksi -->
                                             <td class="px-4 py-4 align-top text-right pr-6 pt-4">
                                                 <div class="flex items-center justify gap-2">
-                                                    <!-- Tombol Edit -->
                                                     <a href="index.php?edit_id=<?= $item['id'] ?>&search=<?= urlencode($search) ?>&sort=<?= strtolower($sort) ?>&year=<?= urlencode($selected_year) ?>&bulan=<?= urlencode($selected_bulan) ?>&limit=<?= urlencode($limit_val) ?>" class="inline-flex items-center justify-center w-8 h-8 rounded bg-blue-50 text-blue-500 hover:bg-blue-100 transition-colors" title="Edit Data">
                                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                                                     </a>
                                                     
-                                                    <!-- Form Delete -->
                                                     <form id="delete-form-<?= $item['id'] ?>" action="index.php" method="POST" class="hidden">
                                                         <input type="hidden" name="action" value="delete">
                                                         <input type="hidden" name="id" value="<?= $item['id'] ?>">
@@ -617,19 +601,19 @@ $total_data = $query_total->fetch_assoc()['total'];
                                 </tbody>
                             </table>
                         </div>
+
+                        <!-- footer tabel -->
                         <?php if ($total_pages > 1 || $limit_val !== 'all'): ?>
                         <div class="px-6 py-4 bg-gray-50/50 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4">
                             
-                            <!-- Info Rentang Data -->
                             <div class="text-xs text-gray-500 font-medium">
                                 Menampilkan <span class="font-bold text-gray-800"><?= $total_items_bulan > 0 ? $start_no : 0 ?></span> - <span class="font-bold text-gray-800"><?= $end_no ?></span> dari <span class="font-bold text-gray-800"><?= $total_items_bulan ?></span> data
                             </div>
 
-                            <!-- Tombol Navigasi Halaman -->
                             <?php if ($total_pages > 1): ?>
                             <div class="flex items-center gap-1">
                                 
-                                <!-- Tombol Prev -->
+                                <!-- prev page -->
                                 <?php if ($page > 1): ?>
                                     <a href="index.php?search=<?= urlencode($search) ?>&sort=<?= strtolower($sort) ?>&year=<?= urlencode($selected_year) ?>&bulan=<?= urlencode($selected_bulan) ?>&limit=<?= urlencode($limit_val) ?>&page=<?= $page - 1 ?>" 
                                        class="px-3 py-1.5 text-xs font-semibold text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-100 transition-all flex items-center gap-1 shadow-sm">
@@ -642,10 +626,8 @@ $total_data = $query_total->fetch_assoc()['total'];
                                     </span>
                                 <?php endif; ?>
 
-                                <!-- Angka Halaman -->
                                 <div class="flex items-center gap-1 px-1">
                                     <?php
-                                    // Menampilkan maksimal 5 tombol halaman di tengah
                                     $start_page = max(1, $page - 2);
                                     $end_page = min($total_pages, $page + 2);
 
@@ -670,7 +652,7 @@ $total_data = $query_total->fetch_assoc()['total'];
                                     ?>
                                 </div>
 
-                                <!-- Tombol Next -->
+                                <!-- next page -->
                                 <?php if ($page < $total_pages): ?>
                                     <a href="index.php?search=<?= urlencode($search) ?>&sort=<?= strtolower($sort) ?>&year=<?= urlencode($selected_year) ?>&bulan=<?= urlencode($selected_bulan) ?>&limit=<?= urlencode($limit_val) ?>&page=<?= $page + 1 ?>" 
                                        class="px-3 py-1.5 text-xs font-semibold text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-100 transition-all flex items-center gap-1 shadow-sm">
@@ -702,7 +684,7 @@ $total_data = $query_total->fetch_assoc()['total'];
         </main>
     </div>
 
-    <!-- Script Minimal Khusus untuk SweetAlert Konfirmasi -->
+    <!-- SweetAlert konfirmasi -->
     <script>
         function confirmAction(type, id = null) {
             let title = type === 'delete' ? 'Yakin Hapus Data?' : 'Simpan Perubahan?';
@@ -750,7 +732,7 @@ $total_data = $query_total->fetch_assoc()['total'];
         <?php unset($_SESSION['swal']); ?>
     <?php endif; ?>
 
-    <!-- Script Live Preview Gambar Upload -->
+    <!-- live preview gambar -->
     <script>
         document.getElementById('uploadFile').addEventListener('change', function(event) {
             const file = event.target.files[0];
@@ -783,7 +765,6 @@ $total_data = $query_total->fetch_assoc()['total'];
                     </div>
                 `;
             } else {
-                // Jika file batal dipilih, kembalikan tampilan seperti semula
                 defaultContent.classList.remove('hidden');
                 previewContainer.classList.add('hidden');
                 if (oldPhoto) oldPhoto.classList.remove('hidden');
@@ -820,7 +801,6 @@ $total_data = $query_total->fetch_assoc()['total'];
             targetPage = maxPages;
         }
 
-        // Ambil URL saat ini dan ubah hanya parameter 'page'
         const urlParams = new URLSearchParams(window.location.search);
         urlParams.set('page', targetPage);
         

@@ -331,11 +331,11 @@ $total_data = $query_total->fetch_assoc()['total'];
                     <!-- up foto -->
                                         
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-1">
-        
-                        <div class="bg-white text-slate-600 rounded-xl border border-slate-200 p-3 flex flex-col items-center justify-between text-center relative">
-                            <span class="text-[11px] font-bold text-gray-600 mb-2">📄 Foto Surat / Barang</span>
+                        
+                        <div id="dropzone-surat" class="bg-white text-slate-600 rounded-xl border-2 border-dashed border-slate-300 p-3 flex flex-col items-center justify-between text-center relative transition-colors duration-200">
+                            <span class="text-[11px] font-bold text-gray-600 mb-2 pointer-events-none">📄 Foto Surat / Barang</span>
                             
-                            <div id="preview-surat" class="w-full h-24 bg-gray-50 rounded-lg flex flex-col items-center justify-center border border-dashed border-gray-300 overflow-hidden mb-2">
+                            <div id="preview-surat" class="w-full h-24 bg-gray-50 rounded-lg flex flex-col items-center justify-center overflow-hidden mb-3 pointer-events-none">
                                 <?php if(!empty($edit_data['foto_surat']) && file_exists('images/'.$edit_data['foto_surat'])): ?>
                                     <img src="images/<?= $edit_data['foto_surat'] ?>" class="w-full h-full object-cover">
                                 <?php else: ?>
@@ -344,16 +344,16 @@ $total_data = $query_total->fetch_assoc()['total'];
                                 <?php endif; ?>
                             </div>
 
-                            <label for="fotoSurat" class="w-full py-1.5 px-2 bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200 rounded-lg text-xs font-semibold cursor-pointer transition-colors">
-                                Pilih Foto Surat
+                            <label for="fotoSurat" class="w-full py-1.5 px-2 bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200 rounded-lg text-[11px] font-semibold cursor-pointer transition-colors relative z-10">
+                                Pilih File <span class="font-normal text-gray-500">atau seret ke sini</span>
                                 <input type="file" name="foto_surat" id="fotoSurat" accept="image/*" class="sr-only" <?= ($edit_data && !empty($edit_data['foto_surat'])) ? '' : 'required' ?> />
                             </label>
                         </div>
 
-                        <div class="bg-white text-slate-600 rounded-xl border border-slate-200 p-3 flex flex-col items-center justify-between text-center relative">
-                            <span class="text-[11px] font-bold text-gray-600 mb-2">👤 Foto Penerima</span>
+                        <div id="dropzone-penerima" class="bg-white text-slate-600 rounded-xl border-2 border-dashed border-slate-300 p-3 flex flex-col items-center justify-between text-center relative transition-colors duration-200">
+                            <span class="text-[11px] font-bold text-gray-600 mb-2 pointer-events-none">👤 Foto Penerima</span>
                             
-                            <div id="preview-penerima" class="w-full h-24 bg-gray-50 rounded-lg flex flex-col items-center justify-center border border-dashed border-gray-300 overflow-hidden mb-2">
+                            <div id="preview-penerima" class="w-full h-24 bg-gray-50 rounded-lg flex flex-col items-center justify-center overflow-hidden mb-3 pointer-events-none">
                                 <?php if(!empty($edit_data['foto_penerima']) && file_exists('images/'.$edit_data['foto_penerima'])): ?>
                                     <img src="images/<?= $edit_data['foto_penerima'] ?>" class="w-full h-full object-cover">
                                 <?php else: ?>
@@ -362,8 +362,8 @@ $total_data = $query_total->fetch_assoc()['total'];
                                 <?php endif; ?>
                             </div>
 
-                            <label for="fotoPenerima" class="w-full py-1.5 px-2 bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200 rounded-lg text-xs font-semibold cursor-pointer transition-colors">
-                                Pilih Foto Penerima
+                            <label for="fotoPenerima" class="w-full py-1.5 px-2 bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200 rounded-lg text-[11px] font-semibold cursor-pointer transition-colors relative z-10">
+                                Pilih File <span class="font-normal text-gray-500">atau seret ke sini</span>
                                 <input type="file" name="foto_penerima" id="fotoPenerima" accept="image/*" class="sr-only" <?= ($edit_data && !empty($edit_data['foto_penerima'])) ? '' : '' ?> />
                             </label>
                         </div>
@@ -806,6 +806,57 @@ $total_data = $query_total->fetch_assoc()['total'];
         
         window.location.search = urlParams.toString();
     }
+</script>
+<script>
+    function setupDragAndDrop(inputId, previewContainerId, dropzoneId) {
+        const input = document.getElementById(inputId);
+        const container = document.getElementById(previewContainerId);
+        const dropzone = document.getElementById(dropzoneId);
+
+        const updatePreview = (file) => {
+            if (file && file.type.startsWith('image/')) {
+                const url = URL.createObjectURL(file);
+                container.innerHTML = `<img src="${url}" class="w-full h-full object-cover animate-fade-in">`;
+            } else {
+                alert("File harus berupa gambar!");
+            }
+        };
+
+        input.addEventListener('change', function(e) {
+            updatePreview(e.target.files[0]);
+        });
+
+        dropzone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropzone.classList.add('border-blue-500', 'bg-blue-50');
+            dropzone.classList.remove('border-slate-300');
+        });
+
+        dropzone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            dropzone.classList.remove('border-blue-500', 'bg-blue-50');
+            dropzone.classList.add('border-slate-300');
+        });
+
+        dropzone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropzone.classList.remove('border-blue-500', 'bg-blue-50');
+            dropzone.classList.add('border-slate-300');
+
+            if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                const file = e.dataTransfer.files[0];
+                
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+                input.files = dataTransfer.files;
+                
+                updatePreview(file);
+            }
+        });
+    }
+
+    setupDragAndDrop('fotoSurat', 'preview-surat', 'dropzone-surat');
+    setupDragAndDrop('fotoPenerima', 'preview-penerima', 'dropzone-penerima');
 </script>
 </body>
 </html>
